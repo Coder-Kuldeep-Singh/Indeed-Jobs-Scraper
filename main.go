@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -17,12 +16,14 @@ func Fetch(Url string) []byte {
 	response, err := http.Get(Url)
 	if err != nil {
 		log.Println("Error to Connect with Indeed.", err)
+		// return
 	}
 	defer response.Body.Close()
 	// log.Println(response)
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		log.Println("Page response is nil", err)
+		// return
 	}
 	// log.Println(string(body))
 	return body
@@ -32,6 +33,7 @@ func GetBrowseJobs(Url string) {
 	response, err := http.Get(Url)
 	if err != nil {
 		log.Println("Error to Connect with Indeed Home page.", err)
+		return
 	}
 	defer response.Body.Close()
 	// fmt.Println(response)
@@ -39,7 +41,8 @@ func GetBrowseJobs(Url string) {
 	document, err := goquery.NewDocumentFromReader(response.Body)
 	if err != nil {
 		log.Fatal("Error loading HTTP response body", err.Error())
-		os.Exit(1)
+		// os.Exit(1)
+		return
 	}
 	document.Find("a.icl-GlobalFooter-link").Each(processElement)
 }
@@ -50,6 +53,7 @@ func processElement(index int, element *goquery.Selection) {
 	if exists {
 		// fmt.Println(href)
 		BrowseJobsPage(href)
+		return
 	}
 }
 func BrowseJobsPage(Urls string) {
@@ -57,6 +61,7 @@ func BrowseJobsPage(Urls string) {
 	response, err := http.Get(Urls)
 	if err != nil {
 		log.Println("Error to Connect with Indeed Browse Jobs Page.", err)
+		return
 	}
 	defer response.Body.Close()
 	// fmt.Println(response)
@@ -64,6 +69,7 @@ func BrowseJobsPage(Urls string) {
 	document, err := goquery.NewDocumentFromReader(response.Body)
 	if err != nil {
 		log.Fatal("Error loading HTTP response body", err.Error())
+		return
 	}
 	document.Find("table#categories tbody tr td a").Each(Processjobs)
 	fmt.Println("***********************************************************************")
@@ -75,6 +81,7 @@ func Processjobs(index int, element *goquery.Selection) {
 	if exists {
 		fmt.Println(href)
 		PerJobsTitlePage(href)
+		return
 	}
 }
 
@@ -96,6 +103,7 @@ func PerJobsTitlePage(Urls string) {
 	response, err := client.Get("https://indeed.co.in" + Urls)
 	if err != nil {
 		log.Println("Error to Connect with Indeed Jobs Category Page.", err)
+		return
 	}
 	defer response.Body.Close()
 	// fmt.Println(response)
@@ -103,6 +111,7 @@ func PerJobsTitlePage(Urls string) {
 	document, err := goquery.NewDocumentFromReader(response.Body)
 	if err != nil {
 		log.Fatal("Error loading HTTP response body", err.Error())
+		return
 	}
 	document.Find("table#titles tbody tr td p.job a").Each(ProcessSinglejob)
 	fmt.Println("***********************************************************************")
@@ -113,6 +122,7 @@ func ProcessSinglejob(index int, element *goquery.Selection) {
 	href, exists := element.Attr("title")
 	if exists {
 		fmt.Println(href)
+		return
 	}
 }
 
