@@ -7,9 +7,12 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/PuerkitoBio/goquery"
 )
+
+// var waitgroup sync.WaitGroup
 
 //Fetch function reads the domain and return the response of the page as  bytes
 func Fetch(Url string) []byte {
@@ -78,8 +81,9 @@ func BrowseJobsPage(Urls string) {
 func Processjobs(index int, element *goquery.Selection) {
 	//see if the href attribute exists on the element
 	href, exists := element.Attr("href")
+	// fmt.Println(len(href))
 	if exists {
-		fmt.Println(href)
+		// fmt.Println(href)
 		PerJobsTitlePage(href)
 		return
 	}
@@ -100,12 +104,17 @@ func PerJobsTitlePage(Urls string) {
 		TLSClientConfig: tlsConfig,
 	}
 	client := http.Client{Transport: transport}
-	response, err := client.Get("https://indeed.co.in" + Urls)
+	response, err := client.Get("https://www.indeed.co.in" + Urls)
 	if err != nil {
 		log.Println("Error to Connect with Indeed Jobs Category Page.", err)
 		return
 	}
 	defer response.Body.Close()
+	// body, err := ioutil.ReadAll(response.Body)
+	// if err != nil {
+	// 	log.Println("Page response is nil", nil)
+	// }
+	// fmt.Println(string(body))
 	// fmt.Println(response)
 	// Load the HTML document
 	document, err := goquery.NewDocumentFromReader(response.Body)
@@ -113,6 +122,7 @@ func PerJobsTitlePage(Urls string) {
 		log.Fatal("Error loading HTTP response body", err.Error())
 		return
 	}
+	createfile(Urls + "\n")
 	document.Find("table#titles tbody tr td p.job a").Each(ProcessSinglejob)
 	fmt.Println("***********************************************************************")
 }
@@ -120,12 +130,31 @@ func PerJobsTitlePage(Urls string) {
 func ProcessSinglejob(index int, element *goquery.Selection) {
 	//see if the href attribute exists on the element
 	href, exists := element.Attr("title")
+	output := ""
 	if exists {
-		fmt.Println(href)
-		return
+		// fmt.Println(href)
+		// createfile(href)
+		output += href + "\n"
+		// return
 	}
+	createfile(output)
+	// fmt.Println(output)
 }
 
+func createfile(out string) {
+	filename, err := os.OpenFile("./output/JobsTitle.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Println("Error to create txt file", err)
+	}
+	defer filename.Close()
+	_, err = filename.WriteString(out)
+	if err != nil {
+		log.Println("Error to append data into txt file", err)
+	}
+	filename.Sync()
+}
 func main() {
+	// waitgroup.Add(1)
 	GetBrowseJobs("https://www.indeed.co.in/")
+	// waitgroup.Wait()
 }
