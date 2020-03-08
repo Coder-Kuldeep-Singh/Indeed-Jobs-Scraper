@@ -10,6 +10,7 @@ import (
 	"os"
 
 	"github.com/PuerkitoBio/goquery"
+
 )
 
 // var waitgroup sync.WaitGroup
@@ -22,7 +23,6 @@ func Fetch(Url string) []byte {
 		// return
 	}
 	defer response.Body.Close()
-	// log.Println(response)
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		log.Println("Page response is nil", err)
@@ -39,8 +39,6 @@ func GetBrowseJobs(Url string) {
 		return
 	}
 	defer response.Body.Close()
-	// fmt.Println(response)
-	// Load the HTML document
 	document, err := goquery.NewDocumentFromReader(response.Body)
 	if err != nil {
 		log.Fatal("Error loading HTTP response body", err.Error())
@@ -51,7 +49,6 @@ func GetBrowseJobs(Url string) {
 }
 
 func processElement(index int, element *goquery.Selection) {
-	//see if the href attribute exists on the element
 	href, exists := element.Attr("href")
 	if exists {
 		// fmt.Println(href)
@@ -67,8 +64,6 @@ func BrowseJobsPage(Urls string) {
 		return
 	}
 	defer response.Body.Close()
-	// fmt.Println(response)
-	// Load the HTML document
 	document, err := goquery.NewDocumentFromReader(response.Body)
 	if err != nil {
 		log.Fatal("Error loading HTTP response body", err.Error())
@@ -81,7 +76,6 @@ func BrowseJobsPage(Urls string) {
 func Processjobs(index int, element *goquery.Selection) {
 	//see if the href attribute exists on the element
 	href, exists := element.Attr("href")
-	// fmt.Println(len(href))
 	if exists {
 		// fmt.Println(href)
 		PerJobsTitlePage(href)
@@ -91,12 +85,6 @@ func Processjobs(index int, element *goquery.Selection) {
 
 func PerJobsTitlePage(Urls string) {
 	fmt.Println(Urls)
-	// tr := &http.Transport{
-	// 	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	// }
-	// client := &http.Client{Transport: tr}
-
-	// SSL config
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: true,
 	}
@@ -110,13 +98,6 @@ func PerJobsTitlePage(Urls string) {
 		return
 	}
 	defer response.Body.Close()
-	// body, err := ioutil.ReadAll(response.Body)
-	// if err != nil {
-	// 	log.Println("Page response is nil", nil)
-	// }
-	// fmt.Println(string(body))
-	// fmt.Println(response)
-	// Load the HTML document
 	document, err := goquery.NewDocumentFromReader(response.Body)
 	if err != nil {
 		log.Fatal("Error loading HTTP response body", err.Error())
@@ -128,18 +109,38 @@ func PerJobsTitlePage(Urls string) {
 }
 
 func ProcessSinglejob(index int, element *goquery.Selection) {
-	//see if the href attribute exists on the element
-	href, exists := element.Attr("title")
+	Title, exists := element.Attr("title")
+	href, _ := element.Attr("href")
 	output := ""
 	if exists {
-		// fmt.Println(href)
-		// createfile(href)
-		output += href + "\n"
-		// return
+		output += Title + "\n"
 	}
 	createfile(output)
-	// fmt.Println(output)
+	EachJobTitlePage(href)
 }
+
+func EachJobTitlePage(Url string) {
+	response, err := http.Get("https://www.indeed.co.in/" + Url)
+	if err != nil {
+		log.Println("Error to Connect with Indeed Each Job Titles Page.", err)
+		return
+	}
+	defer response.Body.Close()
+	document, err := goquery.NewDocumentFromReader(response.Body)
+	if err != nil {
+		log.Fatal("Error loading HTTP response body", err.Error())
+		return
+	}
+	document.Find("div.summary ul li").Each(ExtractDescriptions)
+}
+func ExtractDescriptions(index int, element *goquery.Selection) {
+	href := element.Text()
+	fmt.Println(href + "\n")
+}
+
+// func RecursiveTitleExtracter(url string) {
+
+// }
 
 func createfile(out string) {
 	filename, err := os.OpenFile("./output/JobsTitle.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
