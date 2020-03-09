@@ -10,7 +10,6 @@ import (
 	"os"
 
 	"github.com/PuerkitoBio/goquery"
-
 )
 
 // var waitgroup sync.WaitGroup
@@ -103,7 +102,7 @@ func PerJobsTitlePage(Urls string) {
 		log.Fatal("Error loading HTTP response body", err.Error())
 		return
 	}
-	createfile(Urls + "\n")
+	// createfile(Urls + "\n")
 	document.Find("table#titles tbody tr td p.job a").Each(ProcessSinglejob)
 	fmt.Println("***********************************************************************")
 }
@@ -115,7 +114,7 @@ func ProcessSinglejob(index int, element *goquery.Selection) {
 	if exists {
 		output += Title + "\n"
 	}
-	createfile(output)
+	// createfile(output)
 	EachJobTitlePage(href)
 }
 
@@ -132,10 +131,23 @@ func EachJobTitlePage(Url string) {
 		return
 	}
 	document.Find("div.summary ul li").Each(ExtractDescriptions)
+	document.Find("div.pagination a").Each(ExtractPagination)
+
 }
+
+func ExtractPagination(index int, element *goquery.Selection) {
+	href, _ := element.Attr("href")
+	fmt.Println(href + "\n")
+	// EachJobTitlePage(href)
+	// createfile(href)
+	// fmt.Print("\n")
+}
+
 func ExtractDescriptions(index int, element *goquery.Selection) {
 	href := element.Text()
 	fmt.Println(href + "\n")
+	// createfile(href)
+	fmt.Print("\n")
 }
 
 // func RecursiveTitleExtracter(url string) {
